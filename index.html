@@ -1,0 +1,998 @@
+<title>Udyami Queens Seller Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Hind:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky sidebar + fluid main; each nav item swaps a view; views use a 12-col panel grid that stacks at phone width */
+:root{
+  --bg:#FBF7F8; --panel:#FFFFFF; --ink:#23141B; --muted:#6E5A63; --line:#EADFE3;
+  --accent:#B0245E; --accent-soft:#FBE4EE; --marigold:#E39A12; --marigold-soft:#FDF0D6;
+  --ok:#1E7D55; --ok-soft:#DDF3E8; --warn:#9A5B00; --warn-soft:#FCEBCB; --bad:#B42828; --bad-soft:#FBE3E3;
+  --info:#2B5BA8; --info-soft:#E1EAF8; --side:#2A1520; --side-ink:#F4E6EC; --side-muted:#BFA3AF; --field:#FFFFFF;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Hind",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#150C11; --panel:#1F1319; --ink:#F6EAF0; --muted:#B69DA8; --line:#3A2630;
+  --accent:#F06A9F; --accent-soft:#4A1A2F; --marigold:#F5B642; --marigold-soft:#3F2E0C;
+  --ok:#5CCB98; --ok-soft:#133526; --warn:#F2B35A; --warn-soft:#3D2A0B; --bad:#F08080; --bad-soft:#431818;
+  --info:#8DB2F0; --info-soft:#18284A; --side:#0E070B; --side-ink:#F4E6EC; --side-muted:#9C8290; --field:#2A1A22; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#150C11; --panel:#1F1319; --ink:#F6EAF0; --muted:#B69DA8; --line:#3A2630;
+  --accent:#F06A9F; --accent-soft:#4A1A2F; --marigold:#F5B642; --marigold-soft:#3F2E0C;
+  --ok:#5CCB98; --ok-soft:#133526; --warn:#F2B35A; --warn-soft:#3D2A0B; --bad:#F08080; --bad-soft:#431818;
+  --info:#8DB2F0; --info-soft:#18284A; --side:#0E070B; --side-ink:#F4E6EC; --side-muted:#9C8290; --field:#2A1A22; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+aside{background:var(--side);color:var(--side-ink);padding:22px 16px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px}
+.crest{width:38px;height:38px;border-radius:10px;background:var(--marigold);display:grid;place-items:center;flex:none}
+.brand b{font-family:var(--f-display);font-size:18px;font-weight:700;letter-spacing:-.01em;display:block;line-height:1.1}
+.brand small{color:var(--side-muted);font-size:12px}
+nav{display:flex;flex-direction:column;gap:2px}
+nav button{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:var(--side-muted);font-size:14px}
+nav button:hover{color:var(--side-ink);background:rgba(255,255,255,.05)}
+nav button[aria-current="page"]{background:rgba(255,255,255,.12);color:var(--side-ink);font-weight:500}
+nav button:focus-visible{outline:2px solid var(--marigold)}
+nav .count{margin-left:auto;font-family:var(--f-mono);font-size:11px;background:var(--accent);color:#fff;border-radius:10px;padding:1px 7px}
+nav .count.warn{background:var(--marigold);color:#2A1520}
+.side-card{margin-top:auto;background:rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--side-muted);display:flex;gap:8px;align-items:flex-start}
+.side-card .dot{width:8px;height:8px;border-radius:50%;background:var(--side-muted);margin-top:6px;flex:none}
+.side-card .dot.cloud{background:#5CCB98}.side-card .dot.local{background:#F5B642}.side-card .dot.memory{background:#F08080}
+main{padding-block:22px 40px;padding-inline:28px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.view{display:flex;flex-direction:column;gap:20px;min-width:0}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.top h1{font-family:var(--f-display);font-size:28px;font-weight:700;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.top p{margin:0;color:var(--muted);font-size:14px}
+.top .spacer{flex:1}
+.toggle{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;font-weight:500;font-size:14px;border:1px solid var(--line);background:var(--panel)}
+.toggle .dot{width:9px;height:9px;border-radius:50%;background:var(--ok)}
+.toggle[aria-pressed="false"] .dot{background:var(--bad)}
+.toggle:focus-visible,.btn:focus-visible,.chip:focus-visible,.sw:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.kpi .l{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.kpi .v{font-family:var(--f-display);font-size:30px;font-weight:700;letter-spacing:-.02em;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:13px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;min-width:0}
+.panel h2{font-family:var(--f-display);font-size:17px;font-weight:500;margin:0;letter-spacing:-.01em}
+.ph{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.ph .meta{margin-left:auto;font-size:13px;color:var(--muted)}
+.span-12{grid-column:span 12}.span-7{grid-column:span 7}.span-5{grid-column:span 5}.span-4{grid-column:span 4}.span-8{grid-column:span 8}.span-6{grid-column:span 6}
+.pill{display:inline-block;font-size:12px;font-weight:500;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.p-new{background:var(--info-soft);color:var(--info)}.p-pack{background:var(--warn-soft);color:var(--warn)}
+.p-rider{background:var(--ok-soft);color:var(--ok)}.p-done{background:var(--line);color:var(--muted)}.p-bad{background:var(--bad-soft);color:var(--bad)}
+.order{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.order:first-child{border-top:0}
+.id{font-family:var(--f-mono);font-size:13px;font-weight:500;white-space:nowrap}
+.items{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timer{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.timer.late{color:var(--bad)}
+.btn{all:unset;cursor:pointer;font-size:13px;font-weight:500;padding:6px 14px;border-radius:8px;background:var(--accent);color:#fff;text-align:center;box-sizing:border-box;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn.quiet{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.btn.danger{background:var(--bad);color:#fff}
+.btn.sm{padding:3px 10px}
+.btn:hover{filter:brightness(1.08)}
+.btn[aria-disabled="true"]{opacity:.5;cursor:not-allowed}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.chip{all:unset;cursor:pointer;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+svg text{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+.list{display:flex;flex-direction:column}
+.li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.li:first-child{border-top:0}
+.rank{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.bar-track{height:5px;background:var(--line);border-radius:3px;margin-top:4px}
+.bar-fill{height:5px;background:var(--marigold);border-radius:3px}
+.num{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums}
+.stock{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.stock:first-child{border-top:0}
+.big{font-family:var(--f-display);font-size:34px;font-weight:700;letter-spacing:-.02em;margin:2px 0 10px}
+.goal{height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.goal div{height:100%;background:var(--ok);border-radius:6px}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0}
+.empty{padding:22px 4px;text-align:center;color:var(--muted);font-size:14px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.empty strong{color:var(--ink);font-weight:500;font-size:15px}
+.heat{display:grid;grid-template-columns:34px repeat(8,minmax(0,1fr));gap:4px;font-size:11px;font-family:var(--f-mono);color:var(--muted)}
+.heat .c{aspect-ratio:1.6;border-radius:4px;background:var(--accent);max-width:100%}
+.heat .c.zero{background:var(--line);opacity:1!important}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+input[type=text],input[type=number],input[type=search],select,textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:7px 10px;width:100%}
+input.mini{width:84px;text-align:right;padding:4px 8px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+label{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;align-items:end}
+.err{color:var(--bad);font-size:13px;min-height:1em;margin:6px 0 0}
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.prod{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.prod.off .swatch,.prod.off h3{opacity:.55}
+.prod .swatch{height:72px;border-radius:8px;display:grid;place-items:center;font-family:var(--f-display);font-size:24px;font-weight:700}
+.prod h3{margin:0;font-size:15px;font-weight:500;overflow-wrap:anywhere}
+.prod .row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+.sw{all:unset;cursor:pointer;width:36px;height:20px;border-radius:999px;background:var(--line);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--panel);transition:left .15s}
+.sw[aria-checked="true"]{background:var(--ok)}
+.sw[aria-checked="true"]::after{left:19px}
+.qty{display:inline-flex;align-items:center;gap:6px}
+.qty .btn{padding:2px 9px}
+.stars{color:var(--marigold);letter-spacing:1px}
+.review{padding:14px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.review:first-child{border-top:0}
+.reply{background:var(--bg);border-radius:0 8px 8px 0;padding:8px 12px;font-size:14px;border-left:3px solid var(--accent)}
+.tag{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:500}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.step{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:14px;align-items:start;padding:14px 0;border-top:1px solid var(--line)}
+.step:first-child{border-top:0}
+.step .n{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:13px;font-weight:500;border:1.5px solid var(--line);color:var(--muted)}
+.step.done .n{background:var(--ok);border-color:var(--ok);color:#fff}
+.step.next .n{border-color:var(--accent);color:var(--accent)}
+.step h3{margin:2px 0 2px;font-size:15px;font-weight:500}
+.step p{margin:0;font-size:14px;color:var(--muted);max-width:62ch}
+details.how{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 18px}
+details.how summary{cursor:pointer;font-weight:500;font-size:14px}
+details.how ol{margin:10px 0 4px;padding-left:22px;color:var(--muted);font-size:14px;display:flex;flex-direction:column;gap:6px}
+details.how ol b{color:var(--ink);font-weight:500}
+.itemlist{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.itemrow{display:flex;align-items:center;gap:10px;font-size:14px;padding:6px 10px;background:var(--bg);border-radius:8px}
+.itemrow span:first-child{flex:1;min-width:0}
+.banner{padding:10px 14px;border-radius:10px;font-size:14px;background:var(--warn-soft);color:var(--warn)}
+.loading{padding:60px 0;text-align:center;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:10;max-width:calc(100% - 32px)}
+.toast.show{opacity:1}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.span-7,.span-5,.span-4,.span-8,.span-6{grid-column:span 12}}
+@media (max-width:760px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  aside{position:static;height:auto;padding:14px 16px;gap:12px}
+  nav{flex-direction:row;overflow-x:auto;gap:4px}
+  nav button{white-space:nowrap;padding:7px 10px}
+  .side-card{margin-top:0}
+  main{padding-inline:16px}
+  .top h1{font-size:23px}
+  .kpi .v{font-size:24px}
+  .hide-sm{display:none}
+  .step{grid-template-columns:30px minmax(0,1fr)}
+  .step .btn{grid-column:2;justify-self:start}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <aside>
+    <div class="brand">
+      <div class="crest" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2A1520" stroke-width="2" stroke-linejoin="round"><path d="M3 18h18l-2-10-5 4-2-7-2 7-5-4z" fill="#2A1520" fill-opacity=".15"/><path d="M4 21h16"/></svg>
+      </div>
+      <div><b>Udyami Queens</b><small id="brandShop">Seller hub</small></div>
+    </div>
+    <nav aria-label="Main">
+      <button data-view="overview" aria-current="page">Overview</button>
+      <button data-view="orders">Orders <span class="count" id="navOrders" hidden></span></button>
+      <button data-view="catalog">Catalog</button>
+      <button data-view="inventory">Inventory <span class="count warn" id="navStock" hidden></span></button>
+      <button data-view="payouts">Payouts</button>
+      <button data-view="reviews">Reviews <span class="count" id="navReviews" hidden></span></button>
+      <button data-view="learn">Learn and grow</button>
+      <button data-view="settings">Shop settings</button>
+    </nav>
+    <div class="side-card"><span class="dot" id="saveDot"></span><span id="saveText">Connecting…</span></div>
+  </aside>
+
+  <main>
+    <div class="top">
+      <div>
+        <h1 id="pageTitle">Welcome to Udyami Queens</h1>
+        <p id="pageSub"></p>
+      </div>
+      <span class="spacer"></span>
+      <button class="toggle" id="storeToggle" aria-pressed="true"><span class="dot"></span><span id="storeLabel">Accepting orders</span></button>
+    </div>
+
+    <div class="loading" id="loading">Loading your shop…</div>
+
+    <!-- OVERVIEW -->
+    <section class="view" id="v-overview" hidden>
+      <div class="panel" id="guidePanel">
+        <div class="ph"><h2>Get started in 6 steps</h2><span class="meta" id="guideProgress"></span><button class="btn quiet sm" id="guideHide">Hide guide</button></div>
+        <ol class="steps" id="steps"></ol>
+      </div>
+      <button class="btn quiet sm" id="guideShow" style="align-self:flex-start" hidden>Show the setup guide</button>
+      <div class="kpis">
+        <div class="kpi"><div class="l">Today's sales</div><div class="v" id="kSales">₹0</div><div class="d" id="kSalesD">Delivered orders today</div></div>
+        <div class="kpi"><div class="l">Orders today</div><div class="v" id="kOrders">0</div><div class="d" id="kOrdersD">Cancelled not counted</div></div>
+        <div class="kpi"><div class="l">Live right now</div><div class="v" id="kLive">0</div><div class="d">New, packing or with rider</div></div>
+        <div class="kpi"><div class="l">Rating</div><div class="v" id="kRating">–</div><div class="d" id="kRatingD">No reviews yet</div></div>
+      </div>
+      <div class="grid">
+        <div class="panel span-7">
+          <div class="ph"><h2>Live orders</h2><button class="btn ghost sm" data-go="orders" style="margin-left:auto">Record an order</button></div>
+          <div id="liveOrders"></div>
+        </div>
+        <div class="panel span-5">
+          <div class="ph"><h2>Revenue, last 7 days</h2><span class="meta num" id="weekTotal"></span></div>
+          <div id="chart"></div>
+        </div>
+        <div class="panel span-4">
+          <div class="ph"><h2>Top sellers</h2><span class="meta">Last 7 days</span></div>
+          <div class="list" id="topSellers"></div>
+        </div>
+        <div class="panel span-4">
+          <div class="ph"><h2>Stock alerts</h2><button class="btn quiet sm" data-go="inventory" style="margin-left:auto">Inventory</button></div>
+          <div class="list" id="stockAlerts"></div>
+        </div>
+        <div class="panel span-4">
+          <div class="ph"><h2>This week's payout</h2><span class="meta" id="payWeek"></span></div>
+          <div id="payCard"></div>
+        </div>
+        <div class="panel span-12">
+          <div class="ph"><h2>When your customers order</h2><span class="meta">Orders by day and time, last 4 weeks</span></div>
+          <div id="heat"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ORDERS -->
+    <section class="view" id="v-orders" hidden>
+      <details class="how">
+        <summary>How this page works</summary>
+        <ol>
+          <li><b>Record the order.</b> When a customer orders from you (on the app, WhatsApp or phone), choose each product and quantity, then press Add item.</li>
+          <li><b>Add the delivery area and payment type,</b> then press Create order. Stock goes down straight away.</li>
+          <li><b>Accept</b> the order when you start working on it. It moves to Packing.</li>
+          <li><b>Hand to rider</b> once it's packed and picked up.</li>
+          <li><b>Mark delivered</b> when the customer has it. Only delivered orders count toward sales and payouts.</li>
+          <li>If an order can't go ahead, press <b>Cancel</b> twice. The stock goes back on your shelf.</li>
+        </ol>
+      </details>
+      <div class="panel">
+        <div class="ph"><h2>Record a new order</h2></div>
+        <div class="banner" id="pausedBanner" hidden>Your store is paused. Press "Store paused" at the top to start accepting orders again.</div>
+        <div class="form" id="orderForm">
+          <label style="grid-column:span 2">Product<select id="oProduct"></select></label>
+          <label>Quantity<input type="number" id="oQty" min="1" step="1" value="1"></label>
+          <button class="btn ghost" id="oAdd" type="button" style="height:38px">Add item</button>
+        </div>
+        <div class="itemlist" id="oItems"></div>
+        <div class="form" style="margin-top:12px">
+          <label>Delivery area<input type="text" id="oArea" placeholder="Koramangala 5th Block"></label>
+          <label>Customer name (optional)<input type="text" id="oName" placeholder="Priya"></label>
+          <label>Payment<select id="oPay"><option>UPI</option><option>Cash on delivery</option><option>Card</option></select></label>
+          <button class="btn" id="oCreate" type="button" style="height:38px">Create order</button>
+        </div>
+        <p class="err" id="oErr" role="alert"></p>
+      </div>
+      <div class="panel">
+        <div class="ph">
+          <h2>All orders</h2>
+          <div class="filters" role="group" aria-label="Filter orders" id="orderFilters">
+            <button class="chip" aria-pressed="true" data-f="all">All</button>
+            <button class="chip" aria-pressed="false" data-f="0">New</button>
+            <button class="chip" aria-pressed="false" data-f="1">Packing</button>
+            <button class="chip" aria-pressed="false" data-f="2">With rider</button>
+            <button class="chip" aria-pressed="false" data-f="3">Delivered</button>
+            <button class="chip" aria-pressed="false" data-f="4">Cancelled</button>
+          </div>
+          <div style="margin-left:auto;min-width:200px;flex:0 1 260px"><input type="search" id="orderSearch" placeholder="Search order no., item or area" aria-label="Search orders"></div>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Order</th><th>Placed</th><th class="hide-sm">Area</th><th>Items</th><th class="r">Amount</th><th>Status</th><th class="r">Action</th></tr></thead>
+            <tbody id="orderRows"></tbody>
+          </table>
+        </div>
+        <p class="note" id="orderSummary"></p>
+      </div>
+    </section>
+
+    <!-- CATALOG -->
+    <section class="view" id="v-catalog" hidden>
+      <details class="how">
+        <summary>How this page works</summary>
+        <ol>
+          <li><b>Add each product you sell</b> with its name, category, selling price and how many you have ready.</li>
+          <li><b>Set the reorder level.</b> When stock drops to this number, the product shows up in Stock alerts.</li>
+          <li><b>Change a price</b> by typing a new amount on the product card. It saves when you leave the box.</li>
+          <li><b>Use the switch</b> to hide a product you can't make for a while without deleting it.</li>
+          <li><b>Delete</b> removes the product for good (press it twice). Past orders keep their details.</li>
+        </ol>
+      </details>
+      <div class="panel">
+        <div class="ph"><h2>Add a product</h2></div>
+        <form class="form" id="addForm" novalidate>
+          <label>Product name<input type="text" id="fName" placeholder="Mango pickle 500g"></label>
+          <label>Category<select id="fCat"><option>Pickles</option><option>Sweets</option><option>Spice mixes</option><option>Snacks</option><option>Ready to cook</option><option>Bakery</option><option>Hampers</option><option>Other</option></select></label>
+          <label>Selling price (₹)<input type="number" id="fPrice" min="1" step="1" placeholder="220"></label>
+          <label>Stock ready now<input type="number" id="fStock" min="0" step="1" placeholder="20"></label>
+          <label>Reorder level<input type="number" id="fReorder" min="0" step="1" value="5"></label>
+          <button class="btn" type="submit" style="height:38px">Add product</button>
+        </form>
+        <p class="err" id="fErr" role="alert"></p>
+      </div>
+      <div class="ph" style="margin:0">
+        <div class="filters" role="group" aria-label="Filter by category" id="catFilters"></div>
+        <span class="meta" id="catCount"></span>
+      </div>
+      <div class="products" id="products"></div>
+    </section>
+
+    <!-- INVENTORY -->
+    <section class="view" id="v-inventory" hidden>
+      <details class="how">
+        <summary>How this page works</summary>
+        <ol>
+          <li><b>Check the status column.</b> Products at zero are out of stock; products at or below their reorder level are running low. Both are listed first.</li>
+          <li><b>Use − and +</b> to correct a count by one, for example after a spoiled jar.</li>
+          <li><b>Type a number in "Add stock"</b> and press Add when you've made a fresh batch.</li>
+          <li><b>Change "Reorder at"</b> to decide when a product should warn you.</li>
+          <li>Stock also changes on its own: it goes down when you create an order and back up if you cancel one.</li>
+        </ol>
+      </details>
+      <div class="kpis">
+        <div class="kpi"><div class="l">Products</div><div class="v" id="iTotal">0</div><div class="d">In your catalog</div></div>
+        <div class="kpi"><div class="l">Out of stock</div><div class="v" id="iOut">0</div><div class="d">Can't be ordered</div></div>
+        <div class="kpi"><div class="l">Running low</div><div class="v" id="iLow">0</div><div class="d">At or below reorder level</div></div>
+        <div class="kpi"><div class="l">Stock value</div><div class="v" id="iValue">₹0</div><div class="d">At selling price</div></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h2>Stock on hand</h2></div>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Product</th><th class="hide-sm">Category</th><th class="r">Sold, 7 days</th><th class="r">Reorder at</th><th>Status</th><th class="r">In stock</th><th class="r">Add stock</th></tr></thead>
+            <tbody id="invRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAYOUTS -->
+    <section class="view" id="v-payouts" hidden>
+      <details class="how">
+        <summary>How this page works</summary>
+        <ol>
+          <li><b>Set your platform fee and monthly goal</b> in Shop settings. They're used for every number here.</li>
+          <li><b>Only delivered orders count.</b> Each week runs Monday to Sunday.</li>
+          <li><b>Your payout</b> is the week's sales minus the platform fee.</li>
+          <li><b>When the money reaches your bank,</b> press Mark received on that week so you know what's still due.</li>
+          <li><b>Copy as CSV</b> copies the table so you can paste it into a spreadsheet for your accountant.</li>
+        </ol>
+      </details>
+      <div class="grid">
+        <div class="panel span-5">
+          <div class="ph"><h2>This week so far</h2><span class="meta" id="pWeekLabel"></span></div>
+          <div id="pBreakdown"></div>
+        </div>
+        <div class="panel span-7">
+          <div class="ph"><h2 id="pGoalTitle">Monthly goal</h2><span class="meta" id="pGoalMeta"></span></div>
+          <div id="pGoal"></div>
+        </div>
+        <div class="panel span-12">
+          <div class="ph"><h2>Weekly settlements</h2><button class="btn quiet sm" id="exportBtn" style="margin-left:auto">Copy as CSV</button></div>
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th>Week</th><th class="r">Orders</th><th class="r">Sales</th><th class="r">Fee</th><th class="r">Payout</th><th>Status</th><th class="r"></th></tr></thead>
+              <tbody id="payRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REVIEWS -->
+    <section class="view" id="v-reviews" hidden>
+      <details class="how">
+        <summary>How this page works</summary>
+        <ol>
+          <li><b>Record feedback</b> whenever a customer rates you or sends a message about a product.</li>
+          <li><b>Pick the product and the stars</b> they gave, and paste what they said.</li>
+          <li><b>Reply</b> to each one. Reviews without a reply are counted on the sidebar.</li>
+          <li><b>Use "3 stars and below"</b> to find the products customers are unhappy with.</li>
+        </ol>
+      </details>
+      <div class="panel">
+        <div class="ph"><h2>Record customer feedback</h2></div>
+        <form class="form" id="revForm" novalidate>
+          <label>Customer name<input type="text" id="rWho" placeholder="Priya R."></label>
+          <label>Product<select id="rProd"></select></label>
+          <label>Stars<select id="rStars"><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select></label>
+          <label style="grid-column:1/-1">What they said<textarea id="rText" rows="2" placeholder="Tasted fresh, arrived quickly."></textarea></label>
+          <button class="btn" type="submit" style="height:38px">Save feedback</button>
+        </form>
+        <p class="err" id="rErr" role="alert"></p>
+      </div>
+      <div class="grid">
+        <div class="panel span-4">
+          <div class="ph"><h2>Rating</h2></div>
+          <div id="ratingSummary"></div>
+        </div>
+        <div class="panel span-8">
+          <div class="ph">
+            <h2>Customer feedback</h2>
+            <div class="filters" role="group" aria-label="Filter reviews" id="revFilters" style="margin-left:auto">
+              <button class="chip" aria-pressed="true" data-f="all">All</button>
+              <button class="chip" aria-pressed="false" data-f="pending">Needs reply</button>
+              <button class="chip" aria-pressed="false" data-f="low">3 stars and below</button>
+            </div>
+          </div>
+          <div id="reviewList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEARN -->
+    <section class="view" id="v-learn" hidden>
+      <details class="how">
+        <summary>How this page works</summary>
+        <ol>
+          <li><b>Read what each registration or scheme is for,</b> then open the official site with Learn more.</li>
+          <li><b>Set your status</b> as you go: Not started, Applied, or Done.</li>
+          <li><b>Start with the registrations.</b> Most loans and schemes ask for your Udyam and FSSAI numbers.</li>
+          <li>Rules and limits change, so always confirm on the official site before applying.</li>
+        </ol>
+      </details>
+      <div class="panel">
+        <div class="ph"><h2>Registrations for a home food business</h2><span class="meta" id="regProgress"></span></div>
+        <div class="tablewrap"><table><thead><tr><th>Registration</th><th>What it's for</th><th>Your status</th><th class="r"></th></tr></thead><tbody id="regRows"></tbody></table></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h2>Loans and schemes for women entrepreneurs</h2><span class="meta" id="schemeProgress"></span></div>
+        <div class="tablewrap"><table><thead><tr><th>Scheme</th><th>What it offers</th><th>Your status</th><th class="r"></th></tr></thead><tbody id="schemeRows"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="v-settings" hidden>
+      <details class="how" open>
+        <summary>How this page works</summary>
+        <ol>
+          <li><b>Enter your name and shop name.</b> They appear at the top of every page.</li>
+          <li><b>Add your area</b> so you know which delivery zone this dashboard covers.</li>
+          <li><b>Enter the platform fee</b> the marketplace takes from each sale (as a percentage). Payouts use it.</li>
+          <li><b>Set a monthly sales goal</b> to track your progress on the Payouts page.</li>
+          <li>Press <b>Save settings</b>. You can change these any time.</li>
+        </ol>
+      </details>
+      <div class="panel">
+        <div class="ph"><h2>Your shop</h2></div>
+        <form class="form" id="setForm" novalidate>
+          <label>Your name<input type="text" id="sOwner" placeholder="Lakshmi"></label>
+          <label>Shop name<input type="text" id="sShop" placeholder="Lakshmi's Home Kitchen"></label>
+          <label>Area or dark store<input type="text" id="sArea" placeholder="Koramangala, Bengaluru"></label>
+          <label>Platform fee (%)<input type="number" id="sFee" min="0" max="100" step="0.5" placeholder="8"></label>
+          <label>Monthly sales goal (₹)<input type="number" id="sGoal" min="0" step="500" placeholder="50000"></label>
+          <button class="btn" type="submit" style="height:38px">Save settings</button>
+        </form>
+        <p class="err" id="sErr" role="alert"></p>
+      </div>
+      <div class="panel">
+        <div class="ph"><h2>Your data</h2></div>
+        <p style="margin:0 0 12px" id="dataWhere"></p>
+        <button class="btn quiet" id="eraseBtn">Erase all shop data</button>
+        <p class="note" id="eraseNote"></p>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const inr = n => '₹' + Math.round(n || 0).toLocaleString('en-IN');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+let tt;
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),2400); }
+
+/* ---------- storage: account (db) → this browser → memory ---------- */
+const COLLS = ['products','orders','reviews','settings','checklist','payouts'];
+const data = {}; COLLS.forEach(c => data[c] = {});
+let db = null, mode = 'memory', ready = false;
+const LS_KEY = 'udyami-queens-v1';
+function saveLocal(){ if(mode !== 'local') return; try{ localStorage.setItem(LS_KEY, JSON.stringify(data)); }catch(e){} }
+function loadLocal(){
+  try{ const raw = localStorage.getItem(LS_KEY); if(raw){ const o = JSON.parse(raw); COLLS.forEach(c => data[c] = o[c] || {}); } localStorage.setItem(LS_KEY+'-probe','1'); mode='local'; }
+  catch(e){ mode='memory'; }
+}
+function fail(e){ toast(e && e.code === 'quota_exceeded' ? 'Storage is full. Delete old orders or products to add more.' : 'That change could not be saved. Check your connection and try again.'); }
+async function put(c, id, obj){
+  data[c] = {...data[c], [id]: obj}; renderAll();
+  if(db){ try{ await db.doc(c + '/' + id).set(obj); }catch(e){ fail(e); } } else saveLocal();
+}
+async function remove(c, id){
+  const n = {...data[c]}; delete n[id]; data[c] = n; renderAll();
+  if(db){ try{ await db.doc(c + '/' + id).delete(); }catch(e){ fail(e); } } else saveLocal();
+}
+const list = c => Object.entries(data[c]).map(([id, v]) => ({id, ...v}));
+const settings = () => data.settings.shop || {};
+
+async function init(){
+  let got = null;
+  try{ got = window.claude && typeof window.claude.use === 'function' ? await window.claude.use('db') : null; }catch(e){ got = null; }
+  if(got){
+    db = got; mode = 'cloud';
+    let pending = new Set(COLLS);
+    const done = c => { if(pending.delete(c) && pending.size === 0){ ready = true; boot(); } };
+    COLLS.forEach(c => db.collection(c).onSnapshot(s => {
+      const m = {}; s.docs.forEach(d => { m[d.id] = d.data(); }); data[c] = m; done(c); if(ready) renderAll();
+    }, err => { done(c); if(err && err.code === 'revoked'){ mode='memory'; db=null; renderAll(); } }));
+    setTimeout(() => { if(!ready){ ready = true; boot(); } }, 8000);
+  } else { loadLocal(); ready = true; boot(); }
+}
+let booted = false;
+function boot(){
+  if(booted) return; booted = true;
+  $('loading').hidden = true;
+  const start = (location.hash || '').slice(1);
+  go(TITLES[start] ? start : (settings().shop ? 'overview' : 'overview'));
+}
+
+/* ---------- dates ---------- */
+const DAY = 864e5;
+const startOfDay = t => { const d = new Date(t); d.setHours(0,0,0,0); return d.getTime(); };
+const weekStart = t => { const d = new Date(startOfDay(t)); const wd = (d.getDay() + 6) % 7; return d.getTime() - wd*DAY; };
+const fmtDate = t => new Date(t).toLocaleDateString('en-IN', {day:'numeric', month:'short'});
+const fmtTime = t => new Date(t).toLocaleTimeString('en-IN', {hour:'numeric', minute:'2-digit'});
+const fmtWhen = t => startOfDay(t) === startOfDay(Date.now()) ? fmtTime(t) : fmtDate(t) + ', ' + fmtTime(t);
+const since = t => { const s = Math.max(0, Math.floor((Date.now() - t)/1000)); return s < 3600 ? Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s' : Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m'; };
+
+/* ---------- derived ---------- */
+const ST = [{t:'New',c:'p-new'},{t:'Packing',c:'p-pack'},{t:'With rider',c:'p-rider'},{t:'Delivered',c:'p-done'},{t:'Cancelled',c:'p-bad'}];
+const orders = () => list('orders').sort((a,b) => b.createdAt - a.createdAt);
+const products = () => list('products').sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
+const reviews = () => list('reviews').sort((a,b) => b.createdAt - a.createdAt);
+const delivered = () => orders().filter(o => o.status === 3);
+const saleTime = o => o.deliveredAt || o.createdAt;
+const itemsText = o => (o.items || []).map(i => `${i.qty}× ${i.name}`).join(', ');
+const feePct = () => Number(settings().fee) || 0;
+function soldSince(t){ const m = {}; delivered().filter(o => saleTime(o) >= t).forEach(o => (o.items||[]).forEach(i => { m[i.pid] = (m[i.pid]||0) + i.qty; })); return m; }
+const isLow = p => (p.stock||0) <= (p.reorder||0);
+
+/* ---------- navigation ---------- */
+const TITLES = {
+  overview:null,
+  orders:['Orders','Record every order and move it from new to delivered.'],
+  catalog:['Catalog','The products you sell, their prices and whether customers can order them.'],
+  inventory:['Inventory','How much of each product you have ready to sell.'],
+  payouts:['Payouts','What you earned each week after the platform fee.'],
+  reviews:['Reviews','What customers say about your products.'],
+  learn:['Learn and grow','Registrations and funding schemes for women-led food businesses in India.'],
+  settings:['Shop settings','Your shop details, platform fee and sales goal.'],
+};
+let current = 'overview';
+function go(view){
+  if(!(view in TITLES)) view = 'overview';
+  current = view;
+  document.querySelectorAll('.view').forEach(v => v.hidden = v.id !== 'v-' + view);
+  document.querySelectorAll('nav button').forEach(b => b.dataset.view === view ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current'));
+  try{ history.replaceState(null, '', '#' + view); }catch(e){}
+  if(view === 'settings') fillSettings();
+  if(view === 'payouts' && !settings().seenPayouts) put('settings', 'shop', {...settings(), seenPayouts:true});
+  renderAll();
+  try{ window.scrollTo(0,0); }catch(e){}
+}
+document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => go(b.dataset.view)));
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if(g){ go(g.dataset.go); if(g.dataset.focus){ const f=$(g.dataset.focus); if(f) f.focus(); } } });
+
+/* two-press confirm for destructive buttons */
+function confirmPress(btn, label){
+  if(btn.dataset.armed === '1') return true;
+  btn.dataset.armed = '1'; const old = btn.textContent; btn.textContent = label; btn.classList.add('danger');
+  setTimeout(() => { if(btn.isConnected){ btn.dataset.armed = ''; btn.textContent = old; btn.classList.remove('danger'); } }, 3500);
+  return false;
+}
+
+/* ---------- header, sidebar ---------- */
+function renderChrome(){
+  const s = settings();
+  if(current === 'overview'){
+    $('pageTitle').textContent = s.owner ? `Namaste, ${s.owner}` : 'Welcome to Udyami Queens';
+    $('pageSub').textContent = [s.shop, s.area, new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})].filter(Boolean).join(' · ');
+  } else { $('pageTitle').textContent = TITLES[current][0]; $('pageSub').textContent = TITLES[current][1]; }
+  $('brandShop').textContent = s.shop || 'Seller hub';
+  const open = s.paused !== true;
+  $('storeToggle').setAttribute('aria-pressed', open);
+  $('storeLabel').textContent = open ? 'Accepting orders' : 'Store paused';
+  const live = orders().filter(o => o.status < 2).length;
+  $('navOrders').textContent = live; $('navOrders').hidden = !live;
+  const low = products().filter(isLow).length;
+  $('navStock').textContent = low; $('navStock').hidden = !low;
+  const pend = reviews().filter(r => !r.reply).length;
+  $('navReviews').textContent = pend; $('navReviews').hidden = !pend;
+  $('saveDot').className = 'dot ' + mode;
+  $('saveText').textContent = mode === 'cloud' ? 'Saved to your Claude account. Opens the same on any device.' : mode === 'local' ? 'Saved in this browser only. Other devices won\'t see it.' : 'Not saved. Everything resets when you reload.';
+}
+$('storeToggle').addEventListener('click', () => {
+  const s = settings(); const paused = !(s.paused === true);
+  put('settings', 'shop', {...s, paused});
+  toast(paused ? 'Store paused. You can finish orders already in progress.' : 'Store is open for orders again.');
+});
+
+/* ---------- overview ---------- */
+let guideHidden = false; try{ guideHidden = localStorage.getItem('uq-guide-hidden') === '1'; }catch(e){}
+function stepsState(){
+  const s = settings(), ps = products(), os = orders();
+  return [
+    {t:'Set up your shop', d:'Add your name, shop name, area and the platform fee you pay. This takes a minute.', done: !!(s.shop && s.owner), go:'settings', b:'Open settings'},
+    {t:'Add your first product', d:'Enter what you sell, its price and how many you have ready. Add all your products the same way.', done: ps.length > 0, go:'catalog', b:'Add a product'},
+    {t:'Record your first order', d:'When a customer orders, pick the products and quantity on the Orders page and press Create order.', done: os.length > 0, go:'orders', b:'Record an order'},
+    {t:'Deliver it', d:'Press Accept, then Hand to rider, then Mark delivered. Delivered orders are what count as sales.', done: os.some(o => o.status === 3), go:'orders', b:'Go to orders'},
+    {t:'Check your payout', d:'The Payouts page shows this week\'s sales minus the platform fee, and what\'s still due to you.', done: !!(s.seenPayouts), go:'payouts', b:'View payouts'},
+    {t:'Record customer feedback', d:'Note what customers say and reply to them. Your rating is worked out from these.', done: reviews().length > 0, go:'reviews', b:'Add feedback'},
+  ];
+}
+function renderOverview(){
+  const steps = stepsState(), doneN = steps.filter(x => x.done).length, nextI = steps.findIndex(x => !x.done);
+  const allDone = doneN === steps.length;
+  $('guidePanel').hidden = guideHidden || allDone;
+  $('guideShow').hidden = !(guideHidden && !allDone);
+  $('guideProgress').textContent = `${doneN} of ${steps.length} done`;
+  $('steps').innerHTML = steps.map((x,i) => `<li class="step ${x.done?'done':i===nextI?'next':''}"><span class="n">${x.done?'✓':i+1}</span><div><h3>${x.t}</h3><p>${x.d}</p></div>${x.done?'<span class="pill p-rider">Done</span>':`<button class="btn ${i===nextI?'':'ghost'} sm" data-go="${x.go}">${x.b}</button>`}</li>`).join('');
+
+  const today = startOfDay(Date.now()), os = orders();
+  const todayDel = os.filter(o => o.status === 3 && saleTime(o) >= today);
+  const todayAll = os.filter(o => o.createdAt >= today && o.status !== 4);
+  $('kSales').textContent = inr(todayDel.reduce((a,o) => a + o.total, 0));
+  $('kSalesD').textContent = `${todayDel.length} delivered today`;
+  $('kOrders').textContent = todayAll.length;
+  const canc = os.filter(o => o.createdAt >= today && o.status === 4).length;
+  $('kOrdersD').textContent = canc ? `${canc} cancelled, not counted` : 'Cancelled not counted';
+  const live = os.filter(o => o.status < 3);
+  $('kLive').textContent = live.length;
+  const rs = reviews();
+  if(rs.length){ $('kRating').innerHTML = (rs.reduce((a,r)=>a+r.stars,0)/rs.length).toFixed(1) + '<span style="font-size:18px;color:var(--marigold)"> ★</span>'; $('kRatingD').textContent = `${rs.length} review${rs.length>1?'s':''}`; }
+  else { $('kRating').textContent = '–'; $('kRatingD').textContent = 'No reviews yet'; }
+
+  $('liveOrders').innerHTML = live.length ? live.slice(0,6).map(o => { const s = ST[o.status], late = o.status < 2 && Date.now() - o.createdAt > 3e5;
+    return `<div class="order"><div style="min-width:0"><div><span class="id">#${o.no}</span> <span class="num" style="color:var(--muted)">${inr(o.total)}</span></div><div class="items">${esc(itemsText(o))}</div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px"><span class="pill ${s.c}">${s.t}</span><span class="timer ${late?'late':''}" data-since="${o.createdAt}" data-late="${o.status<2?1:0}">${since(o.createdAt)}</span></div>
+      <div>${nextBtn(o)}</div></div>`; }).join('') + (live.length > 6 ? `<p class="note">${live.length - 6} more on the Orders page.</p>` : '')
+    : `<div class="empty"><strong>No live orders</strong>When a customer orders, record it here so you can track packing and delivery.<button class="btn sm" data-go="orders">Record an order</button></div>`;
+
+  renderChart();
+  const sold = soldSince(today - 6*DAY), ps = products();
+  const top = ps.map(p => [p, sold[p.id]||0]).filter(x => x[1] > 0).sort((a,b) => b[1]-a[1]).slice(0,5);
+  $('topSellers').innerHTML = top.length ? top.map(([p,n],i) => `<div class="li"><span class="rank">${i+1}</span><div style="min-width:0"><div style="overflow-wrap:anywhere">${esc(p.name)}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/top[0][1]*100)}%"></div></div></div><span class="num">${n}</span></div>`).join('')
+    : `<div class="empty">Your best-selling products appear here once orders are delivered.</div>`;
+  const low = ps.filter(isLow).sort((a,b) => a.stock - b.stock);
+  $('stockAlerts').innerHTML = !ps.length ? `<div class="empty">Add products to track their stock.<button class="btn ghost sm" data-go="catalog">Add a product</button></div>`
+    : low.length ? low.slice(0,5).map(p => `<div class="stock"><span style="min-width:0;overflow-wrap:anywhere">${esc(p.name)}</span>${stockPill(p)}<button class="btn ghost sm" data-go="inventory">Restock</button></div>`).join('')
+    : `<div class="empty">All products are above their reorder level.</div>`;
+
+  const ws = weekStart(Date.now()), wk = delivered().filter(o => saleTime(o) >= ws);
+  const gross = wk.reduce((a,o)=>a+o.total,0), fee = gross * feePct()/100;
+  $('payWeek').textContent = `${fmtDate(ws)} – ${fmtDate(ws + 6*DAY)}`;
+  $('payCard').innerHTML = `<div class="big">${inr(gross - fee)}</div><p class="note" style="margin:0">${inr(gross)} from ${wk.length} delivered order${wk.length===1?'':'s'}, minus ${feePct()}% platform fee (${inr(fee)}).</p>${settings().fee == null || settings().fee === '' ? '<p class="note"><button class="btn quiet sm" data-go="settings">Set your platform fee</button></p>' : ''}`;
+  renderHeat();
+}
+function renderChart(){
+  const today = startOfDay(Date.now());
+  const days = Array.from({length:7}, (_,i) => { const t = today - (6-i)*DAY; return [new Date(t).toLocaleDateString('en-IN',{weekday:'short'}), t, 0]; });
+  delivered().forEach(o => { const d = startOfDay(saleTime(o)); const x = days.find(k => k[1] === d); if(x) x[2] += o.total; });
+  const total = days.reduce((a,d) => a + d[2], 0);
+  $('weekTotal').textContent = total ? inr(total) : '';
+  if(!total){ $('chart').innerHTML = `<div class="empty">Your daily sales will be drawn here as you deliver orders.</div>`; return; }
+  const peak = Math.max(...days.map(d => d[2]));
+  const niceStep = [100,200,500,1000,2000,2500,5000,10000,20000,25000,50000,100000].find(s => s*4 >= peak) || Math.ceil(peak/4);
+  const max = niceStep * 4;
+  const W=420,H=200,pl=44,pr=14,pt=22,pb=26;
+  const x = i => pl + i*(W-pl-pr)/6, y = v => pt + (1 - v/max)*(H-pt-pb);
+  const lab = v => v >= 1000 ? (v/1000).toFixed(v%1000?1:0).replace('.0','') + 'k' : String(v);
+  let g=''; for(let k=0;k<=4;k++){ const v = niceStep*k; g += `<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end">${lab(v)}</text>`; }
+  const pts = days.map((d,i) => `${x(i)},${y(d[2])}`).join(' ');
+  const last = days[6];
+  $('chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Delivered sales for each of the last 7 days, total ${inr(total)}">${g}<polygon points="${x(0)},${y(0)} ${pts} ${x(6)},${y(0)}" fill="var(--accent)" fill-opacity=".12"/><polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${days.map((d,i)=>`<circle cx="${x(i)}" cy="${y(d[2])}" r="${i===6?5:3}" fill="${i===6?'var(--accent)':'var(--panel)'}" stroke="var(--accent)" stroke-width="2"><title>${d[0]} ${fmtDate(d[1])}: ${inr(d[2])}</title></circle>`).join('')}<text x="${x(6)-8}" y="${Math.max(12,y(last[2])-10)}" text-anchor="end" style="fill:var(--ink);font-weight:500">${inr(last[2])}</text>${days.map((d,i)=>`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${d[0]}</text>`).join('')}</svg>`;
+}
+function renderHeat(){
+  const from = startOfDay(Date.now()) - 27*DAY;
+  const os = orders().filter(o => o.createdAt >= from && o.status !== 4);
+  if(!os.length){ $('heat').innerHTML = `<div class="empty">After a few orders, this shows which days and times are busiest, so you know when to have stock packed and ready.</div>`; return; }
+  const hours = ['8a','10a','12p','2p','4p','6p','8p','10p'], dn = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const grid = dn.map(() => Array(8).fill(0));
+  os.forEach(o => { const d = new Date(o.createdAt); const r = (d.getDay()+6)%7; const c = Math.min(7, Math.max(0, Math.floor((d.getHours()-8)/2))); grid[r][c]++; });
+  const mx = Math.max(1, ...grid.flat());
+  let h = '<div class="heat"><span></span>' + hours.map(x => `<span style="text-align:center">${x}</span>`).join('');
+  grid.forEach((row,r) => { h += `<span style="align-self:center">${dn[r]}</span>` + row.map((n,i) => `<div class="c ${n?'':'zero'}" style="opacity:${(0.18 + n/mx*0.82).toFixed(2)}" title="${dn[r]} ${hours[i]}: ${n} order${n===1?'':'s'}"></div>`).join(''); });
+  $('heat').innerHTML = h + '</div><p class="note">Darker means more orders. Times before 8 am count in the first column and after 10 pm in the last.</p>';
+}
+$('guideHide').addEventListener('click', () => { guideHidden = true; try{ localStorage.setItem('uq-guide-hidden','1'); }catch(e){} renderAll(); });
+$('guideShow').addEventListener('click', () => { guideHidden = false; try{ localStorage.removeItem('uq-guide-hidden'); }catch(e){} renderAll(); });
+
+/* ---------- orders ---------- */
+const NEXT = {0:['Accept',''],1:['Hand to rider','ghost'],2:['Mark delivered','']};
+function nextBtn(o){ const n = NEXT[o.status]; return n ? `<button class="btn ${n[1]} sm" data-adv="${o.id}">${n[0]}</button>` : ''; }
+let draft = [], orderFilter = 'all', orderQuery = '';
+function renderOrderForm(){
+  const ps = products().filter(p => p.active !== false);
+  const paused = settings().paused === true;
+  $('pausedBanner').hidden = !paused;
+  const sel = $('oProduct'), keep = sel.value;
+  sel.innerHTML = ps.length ? ps.map(p => `<option value="${p.id}" ${p.stock>0?'':'disabled'}>${esc(p.name)} · ${inr(p.price)} · ${p.stock>0?p.stock+' in stock':'out of stock'}</option>`).join('') : '<option value="">Add products in Catalog first</option>';
+  if(keep && ps.some(p => p.id === keep)) sel.value = keep;
+  const tot = draft.reduce((a,i) => a + i.qty*i.price, 0);
+  $('oItems').innerHTML = draft.length ? draft.map((i,k) => `<div class="itemrow"><span>${i.qty}× ${esc(i.name)}</span><span class="num">${inr(i.qty*i.price)}</span><button class="btn quiet sm" data-drop="${k}" aria-label="Remove ${esc(i.name)}">Remove</button></div>`).join('') + `<div class="itemrow" style="background:transparent"><span style="font-weight:500">Order total</span><span class="num" style="font-weight:500">${inr(tot)}</span><span style="width:74px"></span></div>` : '';
+}
+$('oAdd').addEventListener('click', () => {
+  const p = data.products[$('oProduct').value], q = Math.floor(Number($('oQty').value));
+  if(!p){ $('oErr').textContent = products().length ? 'Choose a product.' : 'Add a product in Catalog before recording orders.'; return; }
+  if(!(q >= 1)){ $('oErr').textContent = 'Enter a quantity of 1 or more.'; return; }
+  const already = draft.filter(i => i.pid === $('oProduct').value).reduce((a,i)=>a+i.qty,0);
+  if(q + already > p.stock){ $('oErr').textContent = `Only ${p.stock} ${esc(p.name)} in stock.`; return; }
+  const ex = draft.find(i => i.pid === $('oProduct').value);
+  if(ex) ex.qty += q; else draft.push({pid:$('oProduct').value, name:p.name, price:p.price, qty:q});
+  $('oErr').textContent = ''; $('oQty').value = 1; renderOrderForm();
+});
+$('oItems').addEventListener('click', e => { const b = e.target.closest('[data-drop]'); if(b){ draft.splice(Number(b.dataset.drop),1); renderOrderForm(); } });
+$('oCreate').addEventListener('click', async () => {
+  if(settings().paused === true){ $('oErr').textContent = 'Your store is paused. Open it at the top of the page to record new orders.'; return; }
+  if(!draft.length){ $('oErr').textContent = 'Add at least one item.'; return; }
+  const area = $('oArea').value.trim();
+  if(!area){ $('oErr').textContent = 'Enter the delivery area.'; $('oArea').focus(); return; }
+  for(const i of draft){ const p = data.products[i.pid]; if(!p || p.stock < i.qty){ $('oErr').textContent = `Not enough ${esc(i.name)} in stock any more. Remove it and add it again.`; return; } }
+  const no = 1 + orders().reduce((m,o) => Math.max(m, o.no||0), 1000);
+  const id = uid(), total = draft.reduce((a,i)=>a+i.qty*i.price,0);
+  const items = draft.map(i => ({...i})), customer = $('oName').value.trim(), pay = $('oPay').value;
+  draft = []; $('oArea').value=''; $('oName').value=''; $('oErr').textContent='';
+  for(const i of items){ const p = data.products[i.pid]; await put('products', i.pid, {...p, stock: p.stock - i.qty}); }
+  await put('orders', id, {no, items, total, area, customer, pay, status:0, createdAt: Date.now()});
+  toast(`Order #${no} created for ${inr(total)}`);
+});
+async function advance(id){
+  const o = data.orders[id]; if(!o || o.status > 2) return;
+  const status = o.status + 1, upd = {...o, status};
+  if(status === 3) upd.deliveredAt = Date.now();
+  await put('orders', id, upd);
+  toast(status === 1 ? `#${o.no} accepted. Start packing.` : status === 2 ? `#${o.no} is with the rider.` : `#${o.no} delivered. ${inr(o.total)} added to today's sales.`);
+}
+async function cancelOrder(id){
+  const o = data.orders[id]; if(!o || o.status > 2) return;
+  await put('orders', id, {...o, status:4, cancelledAt: Date.now()});
+  for(const i of (o.items||[])){ const p = data.products[i.pid]; if(p) await put('products', i.pid, {...p, stock:(p.stock||0) + i.qty}); }
+  toast(`#${o.no} cancelled. Stock returned to your shelf.`);
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-adv]'); if(a){ advance(a.dataset.adv); return; }
+  const c = e.target.closest('[data-cancel]'); if(c && confirmPress(c, 'Confirm cancel')) cancelOrder(c.dataset.cancel);
+});
+$('orderFilters').addEventListener('click', e => { const c = e.target.closest('.chip'); if(!c) return; $('orderFilters').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed','false')); c.setAttribute('aria-pressed','true'); orderFilter = c.dataset.f; renderOrders(); });
+$('orderSearch').addEventListener('input', e => { orderQuery = e.target.value.trim().toLowerCase(); renderOrders(); });
+function renderOrders(){
+  renderOrderForm();
+  const all = orders();
+  const rows = all.filter(o => (orderFilter === 'all' || o.status == orderFilter) && (!orderQuery || (o.no + ' ' + itemsText(o) + ' ' + o.area + ' ' + (o.customer||'')).toLowerCase().includes(orderQuery)));
+  $('orderRows').innerHTML = !all.length ? `<tr><td colspan="7"><div class="empty"><strong>No orders yet</strong>Record your first order using the form above.</div></td></tr>`
+    : rows.length ? rows.map(o => { const s = ST[o.status];
+      return `<tr><td class="id">#${o.no}</td><td class="num" style="white-space:nowrap">${fmtWhen(o.createdAt)}</td><td class="hide-sm">${esc(o.area)}${o.customer?`<div class="note" style="margin:0">${esc(o.customer)}</div>`:''}</td><td style="min-width:180px">${esc(itemsText(o))}<div class="note" style="margin:0">${esc(o.pay||'')}</div></td><td class="r num">${inr(o.total)}</td><td><span class="pill ${s.c}">${s.t}</span>${o.status<3?` <span class="timer ${o.status<2&&Date.now()-o.createdAt>3e5?'late':''}" data-since="${o.createdAt}" data-late="${o.status<2?1:0}">${since(o.createdAt)}</span>`:''}</td><td class="r" style="white-space:nowrap">${nextBtn(o)}${o.status<3?` <button class="btn quiet sm" data-cancel="${o.id}">Cancel</button>`:''}</td></tr>`; }).join('')
+    : `<tr><td colspan="7" class="note">No orders match. Try another filter or search.</td></tr>`;
+  const del = all.filter(o => o.status === 3), can = all.filter(o => o.status === 4);
+  $('orderSummary').textContent = all.length ? `Showing ${rows.length} of ${all.length} orders · ${del.length} delivered (${inr(del.reduce((a,o)=>a+o.total,0))}) · ${can.length} cancelled` : '';
+}
+setInterval(() => document.querySelectorAll('[data-since]').forEach(el => { const t = Number(el.dataset.since); el.textContent = since(t); el.classList.toggle('late', el.dataset.late === '1' && Date.now() - t > 3e5); }), 1000);
+
+/* ---------- catalog ---------- */
+const TINTS = {Pickles:['var(--warn-soft)','var(--warn)'],Sweets:['var(--accent-soft)','var(--accent)'],'Spice mixes':['var(--bad-soft)','var(--bad)'],Snacks:['var(--ok-soft)','var(--ok)'],Hampers:['var(--info-soft)','var(--info)'],'Ready to cook':['var(--marigold-soft)','var(--warn)'],Bakery:['var(--marigold-soft)','var(--warn)'],Other:['var(--line)','var(--muted)']};
+function stockPill(p){ return !(p.stock > 0) ? '<span class="pill p-bad">Out of stock</span>' : isLow(p) ? `<span class="pill p-pack">Low · ${p.stock} left</span>` : '<span class="pill p-rider">In stock</span>'; }
+let catFilter = 'All';
+function renderCatalog(){
+  const ps = products();
+  const cats = ['All', ...new Set(ps.map(p => p.cat))];
+  if(!cats.includes(catFilter)) catFilter = 'All';
+  $('catFilters').innerHTML = ps.length ? cats.map(c => `<button class="chip" aria-pressed="${c===catFilter}" data-cat="${esc(c)}">${esc(c)}</button>`).join('') : '';
+  const shown = ps.filter(p => catFilter === 'All' || p.cat === catFilter);
+  $('catCount').textContent = ps.length ? `${shown.filter(p => p.active !== false).length} of ${shown.length} visible to customers` : '';
+  const sold = soldSince(0);
+  $('products').innerHTML = !ps.length ? `<div class="panel empty" style="grid-column:1/-1"><strong>Your catalog is empty</strong>Add the first product you sell with the form above.</div>`
+    : shown.map(p => { const [bg,fg] = TINTS[p.cat] || TINTS.Other; const initials = p.name.split(/\s+/).filter(Boolean).slice(0,2).map(w => w[0].toUpperCase()).join('');
+    return `<div class="prod ${p.active===false?'off':''}">
+      <div class="swatch" style="background:${bg};color:${fg}">${esc(initials)}</div>
+      <div class="tag">${esc(p.cat)}</div>
+      <h3>${esc(p.name)}</h3>
+      <div class="row"><label for="pr-${p.id}" style="flex-direction:row;align-items:center">Price (₹)</label><input class="mini" type="number" id="pr-${p.id}" min="1" step="1" value="${p.price}" data-price="${p.id}"></div>
+      <div class="row"><span>${p.stock||0} in stock · ${sold[p.id]||0} sold</span>${stockPill(p)}</div>
+      <div class="row"><span>${p.active===false?'Hidden from customers':'Visible to customers'}</span><button class="sw" role="switch" aria-checked="${p.active!==false}" aria-label="Show ${esc(p.name)} to customers" data-toggle="${p.id}"></button></div>
+      <div class="row"><span></span><button class="btn quiet sm" data-del="${p.id}">Delete</button></div>
+    </div>`; }).join('');
+}
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-cat]'); if(c){ catFilter = c.dataset.cat; renderCatalog(); return; }
+  const tg = e.target.closest('[data-toggle]'); if(tg){ const p = data.products[tg.dataset.toggle]; const active = p.active === false; put('products', tg.dataset.toggle, {...p, active}); toast(`${p.name} is now ${active?'visible to customers':'hidden from customers'}`); return; }
+  const d = e.target.closest('[data-del]'); if(d && confirmPress(d, 'Confirm delete')){ const p = data.products[d.dataset.del]; remove('products', d.dataset.del); toast(`${p ? p.name : 'Product'} deleted`); }
+});
+document.addEventListener('change', e => {
+  const pr = e.target.closest('[data-price]'); if(pr){ const p = data.products[pr.dataset.price], v = Math.round(Number(pr.value)); if(!(v >= 1)){ pr.value = p.price; toast('Price must be at least ₹1.'); return; } if(v !== p.price){ put('products', pr.dataset.price, {...p, price:v}); toast(`${p.name} now costs ${inr(v)}`); } }
+  const ro = e.target.closest('[data-reorder]'); if(ro){ const p = data.products[ro.dataset.reorder], v = Math.floor(Number(ro.value)); if(!(v >= 0)){ ro.value = p.reorder; return; } if(v !== p.reorder) put('products', ro.dataset.reorder, {...p, reorder:v}); }
+});
+$('addForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('fName').value.trim(), price = Number($('fPrice').value), stockRaw = $('fStock').value, stock = Number(stockRaw), reorder = Number($('fReorder').value || 0);
+  let err = '';
+  if(!name) err = 'Enter a product name.';
+  else if(products().some(p => p.name.toLowerCase() === name.toLowerCase())) err = 'You already have a product with this name.';
+  else if(!(price >= 1)) err = 'Enter a selling price of ₹1 or more.';
+  else if(stockRaw === '' || !(stock >= 0) || !Number.isInteger(stock)) err = 'Enter how many you have ready, as a whole number (0 is fine).';
+  else if(!(reorder >= 0) || !Number.isInteger(reorder)) err = 'Enter the reorder level as a whole number.';
+  $('fErr').textContent = err; if(err) return;
+  put('products', uid(), {name, cat:$('fCat').value, price:Math.round(price), stock, reorder, active:true, createdAt:Date.now()});
+  $('fName').value=''; $('fPrice').value=''; $('fStock').value=''; $('fName').focus();
+  toast(`${name} added. Add your next product or go to Orders.`);
+});
+['fName','fPrice','fStock','fReorder'].forEach(id => $(id).addEventListener('input', () => $('fErr').textContent = ''));
+
+/* ---------- inventory ---------- */
+function renderInventory(){
+  const ps = products();
+  $('iTotal').textContent = ps.length;
+  $('iOut').textContent = ps.filter(p => !(p.stock > 0)).length;
+  $('iLow').textContent = ps.filter(p => p.stock > 0 && isLow(p)).length;
+  $('iValue').textContent = inr(ps.reduce((a,p) => a + (p.stock||0)*p.price, 0));
+  const sold = soldSince(startOfDay(Date.now()) - 6*DAY);
+  const sorted = [...ps].sort((a,b) => (a.stock/Math.max(a.reorder,1)) - (b.stock/Math.max(b.reorder,1)));
+  $('invRows').innerHTML = !ps.length ? `<tr><td colspan="7"><div class="empty"><strong>Nothing to count yet</strong>Products you add in Catalog appear here.<button class="btn sm" data-go="catalog">Add a product</button></div></td></tr>`
+    : sorted.map(p => `<tr>
+      <td style="overflow-wrap:anywhere">${esc(p.name)}</td><td class="hide-sm">${esc(p.cat)}</td><td class="r num">${sold[p.id]||0}</td>
+      <td class="r"><input class="mini" type="number" min="0" step="1" value="${p.reorder||0}" data-reorder="${p.id}" aria-label="Reorder level for ${esc(p.name)}"></td>
+      <td>${stockPill(p)}</td>
+      <td class="r"><span class="qty"><button class="btn quiet" data-adj="${p.id}" data-d="-1" aria-label="One less ${esc(p.name)}">−</button><span class="num" style="min-width:28px;text-align:center">${p.stock||0}</span><button class="btn quiet" data-adj="${p.id}" data-d="1" aria-label="One more ${esc(p.name)}">+</button></span></td>
+      <td class="r" style="white-space:nowrap"><input class="mini" type="number" min="1" step="1" placeholder="10" id="add-${p.id}" aria-label="How many ${esc(p.name)} to add" style="width:64px"> <button class="btn ${isLow(p)?'':'ghost'} sm" data-addstock="${p.id}">Add</button></td></tr>`).join('');
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-adj]'); if(a){ const p = data.products[a.dataset.adj]; const stock = Math.max(0, (p.stock||0) + Number(a.dataset.d)); if(stock !== p.stock) put('products', a.dataset.adj, {...p, stock}); return; }
+  const r = e.target.closest('[data-addstock]'); if(r){ const inp = $('add-' + r.dataset.addstock), n = Math.floor(Number(inp.value)); const p = data.products[r.dataset.addstock];
+    if(!(n >= 1)){ toast('Type how many you made, then press Add.'); inp.focus(); return; }
+    put('products', r.dataset.addstock, {...p, stock:(p.stock||0) + n}); toast(`Added ${n} × ${p.name}. You now have ${(p.stock||0)+n}.`); }
+});
+
+/* ---------- payouts ---------- */
+function weeks(){
+  const m = {};
+  delivered().forEach(o => { const w = weekStart(saleTime(o)); (m[w] = m[w] || {w, n:0, gross:0}); m[w].n++; m[w].gross += o.total; });
+  return Object.values(m).sort((a,b) => b.w - a.w).map(x => ({...x, fee:x.gross*feePct()/100, net:x.gross*(1-feePct()/100), received: !!(data.payouts['w' + x.w] && data.payouts['w' + x.w].received)}));
+}
+function renderPayouts(){
+  const s = settings();
+  const ws = weekStart(Date.now()), all = weeks(), cur = all.find(x => x.w === ws) || {n:0,gross:0,fee:0,net:0};
+  $('pWeekLabel').textContent = `${fmtDate(ws)} – ${fmtDate(ws + 6*DAY)}`;
+  $('pBreakdown').innerHTML = `<div class="big">${inr(cur.net)}</div><table><tbody>
+    <tr><td>Delivered orders</td><td class="r num">${cur.n}</td></tr>
+    <tr><td>Sales</td><td class="r num">${inr(cur.gross)}</td></tr>
+    <tr><td>Platform fee (${feePct()}%)</td><td class="r num">−${inr(cur.fee)}</td></tr>
+    <tr><td style="font-weight:500">Your payout</td><td class="r num" style="font-weight:500">${inr(cur.net)}</td></tr></tbody></table>
+    ${s.fee == null || s.fee === '' ? '<p class="note">No platform fee set yet, so the fee shows as 0%. <button class="btn quiet sm" data-go="settings">Set fee</button></p>' : ''}`;
+  const now = new Date(), ms = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const month = delivered().filter(o => saleTime(o) >= ms).reduce((a,o) => a + o.total, 0);
+  const goal = Number(s.goal) || 0, monthName = now.toLocaleDateString('en-IN',{month:'long'});
+  $('pGoalTitle').textContent = `${monthName} goal`;
+  if(goal > 0){
+    const pct = Math.min(100, Math.round(month/goal*100));
+    const dim = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate(), dayN = now.getDate();
+    const pace = month / dayN * dim;
+    $('pGoalMeta').textContent = `${inr(month)} of ${inr(goal)}`;
+    $('pGoal').innerHTML = `<div class="goal" style="height:14px" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Monthly goal"><div style="width:${pct}%"></div></div>
+      <p class="note">${pct}% reached with ${dim - dayN} day${dim-dayN===1?'':'s'} left. ${month ? `At your current pace you'll reach about ${inr(pace)} this month${pace >= goal ? ', which meets your goal.' : `. You need about ${inr((goal - month)/Math.max(1, dim - dayN + 1))} a day to get there.`}` : 'Deliver orders to start counting toward it.'}</p>`;
+  } else { $('pGoalMeta').textContent = inr(month) + ' so far'; $('pGoal').innerHTML = `<div class="empty">Set a monthly sales goal to track your progress here.<button class="btn ghost sm" data-go="settings">Set a goal</button></div>`; }
+  $('payRows').innerHTML = all.length ? all.map(x => `<tr><td style="white-space:nowrap">${fmtDate(x.w)} – ${fmtDate(x.w + 6*DAY)}${x.w===ws?' <span class="pill p-new">This week</span>':''}</td><td class="r num">${x.n}</td><td class="r num">${inr(x.gross)}</td><td class="r num">${inr(x.fee)}</td><td class="r num" style="font-weight:500">${inr(x.net)}</td><td>${x.received?'<span class="pill p-rider">Received</span>':x.w===ws?'<span class="pill p-new">Week in progress</span>':'<span class="pill p-pack">Due</span>'}</td><td class="r"><button class="btn quiet sm" data-recv="${x.w}">${x.received?'Undo':'Mark received'}</button></td></tr>`).join('')
+    : `<tr><td colspan="7"><div class="empty"><strong>No settlements yet</strong>Each week with delivered orders gets a row here.</div></td></tr>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-recv]'); if(!b) return; const k = 'w' + b.dataset.recv, was = !!(data.payouts[k] && data.payouts[k].received); put('payouts', k, {received: !was, at: Date.now()}); toast(was ? 'Marked as due again' : 'Marked as received'); });
+$('exportBtn').addEventListener('click', () => {
+  const rows = weeks(); if(!rows.length){ toast('No settlements to copy yet.'); return; }
+  const csv = ['Week starting,Week ending,Delivered orders,Sales (INR),Platform fee (INR),Payout (INR),Status', ...rows.map(x => [new Date(x.w).toISOString().slice(0,10), new Date(x.w+6*DAY).toISOString().slice(0,10), x.n, Math.round(x.gross), Math.round(x.fee), Math.round(x.net), x.received?'Received':'Due'].join(','))].join('\n');
+  try{ navigator.clipboard.writeText(csv).then(() => toast('Copied. Paste it into a spreadsheet.'), () => toast('Copying is blocked here. Select the table and copy it instead.')); }catch(err){ toast('Copying is blocked here. Select the table and copy it instead.'); }
+});
+
+/* ---------- reviews ---------- */
+let revFilter = 'all', replying = null;
+function renderReviews(){
+  const ps = products(), sel = $('rProd'), keep = sel.value;
+  sel.innerHTML = ps.length ? ps.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('') + '<option value="">General feedback</option>' : '<option value="">General feedback</option>';
+  if(keep && [...sel.options].some(o => o.value === keep)) sel.value = keep;
+  const rs = reviews();
+  if(rs.length){
+    const avg = rs.reduce((a,r)=>a+r.stars,0)/rs.length, dist = [5,4,3,2,1].map(s => [s, rs.filter(r => r.stars === s).length]);
+    $('ratingSummary').innerHTML = `<div class="big">${avg.toFixed(1)} <span class="stars" style="font-size:22px">${'★'.repeat(Math.round(avg))}${'☆'.repeat(5-Math.round(avg))}</span></div><p class="note" style="margin:0 0 8px">From ${rs.length} review${rs.length>1?'s':''}</p><div class="list">${dist.map(([s,n]) => `<div class="li" style="grid-template-columns:28px minmax(0,1fr) 30px"><span class="num">${s}★</span><div class="bar-track" style="margin:0;height:7px"><div class="bar-fill" style="height:7px;width:${Math.round(n/rs.length*100)}%"></div></div><span class="num" style="text-align:right">${n}</span></div>`).join('')}</div>`;
+  } else $('ratingSummary').innerHTML = `<div class="empty">Your average rating appears after you record the first review.</div>`;
+  const shown = rs.filter(r => revFilter === 'all' || (revFilter === 'pending' && !r.reply) || (revFilter === 'low' && r.stars <= 3));
+  $('reviewList').innerHTML = !rs.length ? `<div class="empty"><strong>No feedback yet</strong>Use the form above whenever a customer rates you or sends a message.</div>`
+    : shown.length ? shown.map(r => `<div class="review">
+      <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap"><strong style="font-weight:500">${esc(r.who)}</strong><span class="stars">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</span><span class="note" style="margin:0">${esc(r.prodName||'General feedback')} · ${fmtDate(r.createdAt)}</span>${r.reply?'':'<span class="pill p-pack" style="margin-left:auto">Needs reply</span>'}</div>
+      <div style="overflow-wrap:anywhere">${esc(r.text)}</div>
+      ${r.reply ? `<div class="reply"><span class="note" style="margin:0">Your reply</span><br>${esc(r.reply)}</div>`
+        : replying === r.id ? `<div style="display:flex;flex-direction:column;gap:8px"><textarea id="replyText" rows="2" placeholder="Thank you for ordering from us." aria-label="Reply to ${esc(r.who)}"></textarea><p class="err" id="replyErr" style="margin:0"></p><div style="display:flex;gap:8px"><button class="btn sm" data-send="${r.id}">Save reply</button><button class="btn quiet sm" data-cancelreply="1">Cancel</button></div></div>`
+        : `<div style="display:flex;gap:8px"><button class="btn ghost sm" data-reply="${r.id}">Reply</button><button class="btn quiet sm" data-delrev="${r.id}">Delete</button></div>`}
+    </div>`).join('') : '<p class="note">Nothing here. You\'re all caught up.</p>';
+  if(replying !== null){ const t = $('replyText'); if(t && document.activeElement !== t) t.focus(); }
+}
+$('revFilters').addEventListener('click', e => { const c = e.target.closest('.chip'); if(!c) return; $('revFilters').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed','false')); c.setAttribute('aria-pressed','true'); revFilter = c.dataset.f; replying = null; renderReviews(); });
+$('revForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const who = $('rWho').value.trim(), text = $('rText').value.trim();
+  if(!who){ $('rErr').textContent = 'Enter the customer\'s name.'; return; }
+  if(!text){ $('rErr').textContent = 'Enter what the customer said.'; return; }
+  $('rErr').textContent = '';
+  const pid = $('rProd').value, p = data.products[pid];
+  put('reviews', uid(), {who, text, stars:Number($('rStars').value), pid, prodName: p ? p.name : '', createdAt:Date.now(), reply:''});
+  $('rWho').value=''; $('rText').value='';
+  toast('Feedback saved. Reply to it below.');
+});
+['rWho','rText'].forEach(id => $(id).addEventListener('input', () => $('rErr').textContent = ''));
+document.addEventListener('click', e => {
+  const r = e.target.closest('[data-reply]'); if(r){ replying = r.dataset.reply; renderReviews(); return; }
+  if(e.target.closest('[data-cancelreply]')){ replying = null; renderReviews(); return; }
+  const s = e.target.closest('[data-send]'); if(s){ const v = $('replyText').value.trim(); if(!v){ $('replyErr').textContent = 'Write a reply first.'; return; } const rv = data.reviews[s.dataset.send]; replying = null; put('reviews', s.dataset.send, {...rv, reply:v, repliedAt:Date.now()}); toast('Reply saved'); return; }
+  const d = e.target.closest('[data-delrev]'); if(d && confirmPress(d, 'Confirm delete')){ remove('reviews', d.dataset.delrev); toast('Feedback deleted'); }
+});
+
+/* ---------- learn and grow ---------- */
+const REGS = [
+  {k:'udyam', n:'Udyam registration', d:'Free government registration as a micro, small or medium enterprise (MSME). Needed for most loans and schemes.', u:'https://udyamregistration.gov.in/'},
+  {k:'fssai', n:'FSSAI food registration', d:'Required to sell food in India. Small home businesses usually need the basic registration, not a full licence.', u:'https://foscos.fssai.gov.in/'},
+  {k:'gst', n:'GST registration', d:'Check whether you need GST when selling through online platforms. Your platform or an accountant can confirm.', u:'https://www.gst.gov.in/'},
+  {k:'bank', n:'Business bank account and UPI', d:'Keeps shop money separate from household money and makes payouts and loan applications easier.', u:'https://www.npci.org.in/what-we-do/upi/product-overview'},
+];
+const SCHEMES = [
+  {k:'mudra', n:'PM Mudra Yojana', d:'Collateral-free loans for small businesses through banks, in tiers from small (Shishu) to larger (Tarun) amounts.', u:'https://www.mudra.org.in/'},
+  {k:'standup', n:'Stand-Up India', d:'Bank loans from ₹10 lakh to ₹1 crore for women and SC/ST entrepreneurs starting a new enterprise.', u:'https://www.standupmitra.in/'},
+  {k:'pmegp', n:'PMEGP', d:'Subsidy on a bank loan for setting up a new micro-enterprise, run by KVIC and District Industries Centres.', u:'https://www.kviconline.gov.in/pmegpeportal/'},
+  {k:'pmfme', n:'PM Formalisation of Micro Food Processing Enterprises (PMFME)', d:'Credit-linked support and training for small food processing units, including home-based ones.', u:'https://pmfme.mofpi.gov.in/'},
+];
+const STATUS = ['Not started','Applied','Done'];
+function checkRows(arr){ return arr.map(x => { const st = (data.checklist[x.k] && data.checklist[x.k].status) || 'Not started'; const cls = st==='Done'?'p-rider':st==='Applied'?'p-pack':'p-done';
+  return `<tr><td style="font-weight:500;min-width:140px">${x.n}</td><td style="min-width:220px;color:var(--muted)">${x.d}</td><td><select data-check="${x.k}" aria-label="Status for ${x.n}" style="width:auto">${STATUS.map(s => `<option ${s===st?'selected':''}>${s}</option>`).join('')}</select> <span class="pill ${cls}" style="margin-left:4px">${st}</span></td><td class="r"><a class="btn ghost sm" href="${x.u}" target="_blank" rel="noopener">Learn more</a></td></tr>`; }).join(''); }
+function renderLearn(){
+  $('regRows').innerHTML = checkRows(REGS); $('schemeRows').innerHTML = checkRows(SCHEMES);
+  const cnt = arr => arr.filter(x => data.checklist[x.k] && data.checklist[x.k].status === 'Done').length;
+  $('regProgress').textContent = `${cnt(REGS)} of ${REGS.length} done`;
+  $('schemeProgress').textContent = `${cnt(SCHEMES)} of ${SCHEMES.length} done`;
+}
+document.addEventListener('change', e => { const s = e.target.closest('[data-check]'); if(s){ put('checklist', s.dataset.check, {status:s.value, at:Date.now()}); toast(`Status set to ${s.value}`); } });
+
+/* ---------- settings ---------- */
+function fillSettings(){ const s = settings(); $('sOwner').value = s.owner||''; $('sShop').value = s.shop||''; $('sArea').value = s.area||''; $('sFee').value = s.fee ?? ''; $('sGoal').value = s.goal ?? ''; }
+$('setForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const owner = $('sOwner').value.trim(), shop = $('sShop').value.trim(), feeRaw = $('sFee').value, goalRaw = $('sGoal').value;
+  let err = '';
+  if(!owner) err = 'Enter your name.'; else if(!shop) err = 'Enter your shop name.';
+  else if(feeRaw !== '' && !(Number(feeRaw) >= 0 && Number(feeRaw) <= 100)) err = 'Enter a platform fee between 0 and 100.';
+  else if(goalRaw !== '' && !(Number(goalRaw) >= 0)) err = 'Enter a goal of ₹0 or more.';
+  $('sErr').textContent = err; if(err) return;
+  put('settings', 'shop', {...settings(), owner, shop, area:$('sArea').value.trim(), fee: feeRaw === '' ? '' : Number(feeRaw), goal: goalRaw === '' ? '' : Number(goalRaw)});
+  toast('Settings saved. Next, add your products.');
+});
+['sOwner','sShop','sFee','sGoal'].forEach(id => $(id).addEventListener('input', () => $('sErr').textContent = ''));
+$('eraseBtn').addEventListener('click', async e => {
+  if(!confirmPress(e.currentTarget, 'Press again to erase everything')) return;
+  const jobs = []; COLLS.forEach(c => Object.keys(data[c]).forEach(id => jobs.push([c,id])));
+  COLLS.forEach(c => data[c] = {}); renderAll(); saveLocal();
+  if(db){ for(const [c,id] of jobs){ try{ await db.doc(c + '/' + id).delete(); }catch(err){} } }
+  draft = []; fillSettings(); toast('All shop data erased');
+});
+function renderSettings(){
+  $('dataWhere').textContent = mode === 'cloud' ? 'Your shop data is saved to your Claude account, so it stays after you reload and opens the same on your phone or laptop. Anyone you share this page with can see it.'
+    : mode === 'local' ? 'Your shop data is saved in this browser only. It stays after you reload, but other devices and browsers won\'t see it. Open the page from claude.ai to save it to your account.'
+    : 'This browser won\'t let the page save anything, so your data resets when you reload.';
+}
+
+/* ---------- render ---------- */
+function renderAll(){
+  if(!booted) return;
+  renderChrome();
+  if(current === 'overview') renderOverview();
+  if(current === 'orders') renderOrders();
+  if(current === 'catalog') renderCatalog();
+  if(current === 'inventory') renderInventory();
+  if(current === 'payouts') renderPayouts();
+  if(current === 'reviews') renderReviews();
+  if(current === 'learn') renderLearn();
+  if(current === 'settings') renderSettings();
+}
+init();
+})();
+</script>
